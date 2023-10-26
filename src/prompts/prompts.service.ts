@@ -1,23 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePromptDto } from './dto/create-prompt.dto';
 import { UpdatePromptDto } from './dto/update-prompt.dto';
-import { exec } from 'child_process';
+import { spawn } from 'node-pty';
+import { cwd } from 'node:process';
 
 @Injectable()
 export class PromptsService {
   async create(createPromptDto: CreatePromptDto) {
+    const command = createPromptDto.command;
+
+    // Crie um pseudoterminal (PTY) para o comando.
+    const term = spawn(command, [], {
+      name: 'xterm-256color', // Nome do terminal (pode variar)
+      cols: 80, // Colunas
+      rows: 30, // Linhas
+      cwd: cwd(), // Diretório de trabalho atual
+      env: process.env, // Variáveis de ambiente
+    });
+
+    // Aguarde a saída do comando.
     const outputPromise = new Promise<string | null>((resolve, reject) => {
-      exec(createPromptDto.command, (err, stdout, stderr) => {
-        if (err) {
-          console.log('Custom: Erro - ' + err);
-          resolve(stderr);
-        } else {
-          resolve(stdout);
-        }
+      let output = '';
+      term.onData((data) => {
+        output += data;
       });
+
+      term.onExit(() => {
+        resolve(output);
+      });
+
+      // Envie o comando para o shell.
+      term.write(`${command}\r`);
     });
 
     const output = await outputPromise;
+
+    // Encerre o pseudoterminal.
+    term.kill();
 
     return { output };
   }
