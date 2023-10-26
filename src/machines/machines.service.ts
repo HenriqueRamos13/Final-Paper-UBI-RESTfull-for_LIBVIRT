@@ -6,13 +6,19 @@ import { exec } from 'child_process';
 @Injectable()
 export class MachinesService {
   async create(createMachineDto: CreateMachineDto) {
-    let output: string | null;
-    await exec('virsh list', (err, stdout, stderr) => {
-      if (err) {
-        console.log(err);
-      }
-      output = stdout;
+    const outputPromise = new Promise<string | null>((resolve, reject) => {
+      exec('virsh list', (err, stdout, stderr) => {
+        if (err) {
+          console.log(err);
+          resolve(null);
+        } else {
+          resolve(stdout);
+        }
+      });
     });
+
+    const output = await outputPromise;
+
     return { output };
   }
 
