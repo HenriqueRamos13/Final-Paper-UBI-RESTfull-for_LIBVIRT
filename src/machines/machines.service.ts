@@ -5,15 +5,15 @@ import { exec } from 'child_process';
 
 @Injectable()
 export class MachinesService {
-  create(createMachineDto: CreateMachineDto) {
+  async create(createMachineDto: CreateMachineDto) {
     let output: string | null;
-    exec('virsh list', (err, stdout, stderr) => {
+    await exec('virsh list', (err, stdout, stderr) => {
       if (err) {
         console.log(err);
       }
       output = stdout;
     });
-    return output;
+    return { output };
   }
 
   findAll() {
