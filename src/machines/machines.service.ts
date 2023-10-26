@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 @Injectable()
 export class MachinesService {
   create(createMachineDto: CreateMachineDto) {
-    exec('virsh list', (err, stdout, stderr) => {
+    return exec('virsh list', (err, stdout, stderr) => {
       return stdout;
     });
   }
