@@ -9,7 +9,9 @@ export class MachinesService {
     const outputPromise = new Promise<string | null>((resolve, reject) => {
       exec('virsh list', (err, stdout, stderr) => {
         if (err) {
-          console.log('Custom: Erro');
+          console.log('Custom: Erro - ' + err);
+          console.log('Custom: Stdout - ' + stdout);
+          console.log('Custom: Stderr - ' + stderr);
           resolve(null);
         } else {
           resolve(stdout || stderr);
