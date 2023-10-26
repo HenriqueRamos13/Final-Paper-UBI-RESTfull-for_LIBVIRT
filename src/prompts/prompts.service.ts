@@ -1,53 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePromptDto } from './dto/create-prompt.dto';
 import { UpdatePromptDto } from './dto/update-prompt.dto';
-import { spawn } from 'child_process';
+import { spawn, SpawnOptions } from 'child_process';
 
 @Injectable()
 export class PromptsService {
-  private childProcess = null;
-
   async create(createPromptDto: CreatePromptDto) {
     const command = createPromptDto.command;
-    const outputBuffer = [];
 
-    if (!this.childProcess) {
-      this.childProcess = spawn(command, [], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true,
+    const options: SpawnOptions = {
+      stdio: ['pipe', 'pipe', 'pipe'], // Redireciona stdin, stdout e stderr para pipes.
+      shell: true, // Use o shell para interpretar comandos.
+    };
+
+    const child = spawn(command, [], options);
+
+    // Aguarde a saída do comando.
+    const outputPromise = new Promise<string | null>((resolve, reject) => {
+      let output = '';
+      child.stdout.on('data', (data) => {
+        output += data.toString();
       });
 
-      this.childProcess.stdout.on('data', (data) => {
-        outputBuffer.push(data.toString());
+      child.stderr.on('data', (data) => {
+        output += data.toString();
       });
 
-      this.childProcess.stderr.on('data', (data) => {
-        outputBuffer.push(data.toString());
+      child.on('exit', (code) => {
+        resolve(output);
       });
 
-      this.childProcess.on('exit', (code) => {
-        // Process exited; you can handle this as needed.
-        this.childProcess = null;
-      });
-
-      // Send the command to the shell.
-      this.childProcess.stdin.write(`${command}\n`);
-    } else {
-      // Send a new command to the existing shell.
-      this.childProcess.stdin.write(`${createPromptDto.command}\n`);
-    }
-
-    return new Promise<string>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Command execution timed out.'));
-        this.childProcess.kill();
-      }, 5000); // Timeout in milliseconds (adjust as needed).
-
-      this.childProcess.on('exit', (code) => {
-        clearTimeout(timeout);
-        resolve(outputBuffer.join(''));
-      });
+      // Envie o comando para o shell.
+      child.stdin.write(`${command}\n`);
+      child.stdin.end();
     });
+
+    const output = await outputPromise;
+
+    return { output };
   }
 
   findAll() {
