@@ -1,42 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePromptDto } from './dto/create-prompt.dto';
 import { UpdatePromptDto } from './dto/update-prompt.dto';
-import { spawn } from 'node-pty';
-import { cwd } from 'node:process';
+import { spawn, SpawnOptions } from 'child_process';
 
 @Injectable()
 export class PromptsService {
   async create(createPromptDto: CreatePromptDto) {
     const command = createPromptDto.command;
 
-    // Crie um pseudoterminal (PTY) para o comando.
-    const term = spawn(command, [], {
-      name: 'xterm-256color', // Nome do terminal (pode variar)
-      cols: 80, // Colunas
-      rows: 30, // Linhas
-      cwd: cwd(), // Diretório de trabalho atual
-      env: process.env, // Variáveis de ambiente
-    });
+    const options: SpawnOptions = {
+      stdio: ['pipe', 'pipe', 'pipe'], // Redireciona stdin, stdout e stderr para pipes.
+      shell: true, // Use o shell para interpretar comandos.
+    };
+
+    const child = spawn(command, [], options);
 
     // Aguarde a saída do comando.
     const outputPromise = new Promise<string | null>((resolve, reject) => {
       let output = '';
-      term.onData((data) => {
-        output += data;
+      child.stdout.on('data', (data) => {
+        output += data.toString();
       });
 
-      term.onExit(() => {
+      child.stderr.on('data', (data) => {
+        output += data.toString();
+      });
+
+      child.on('exit', (code) => {
         resolve(output);
       });
 
       // Envie o comando para o shell.
-      term.write(`${command}\r`);
+      child.stdin.write(`${command}\n`);
+      child.stdin.end();
     });
 
     const output = await outputPromise;
-
-    // Encerre o pseudoterminal.
-    term.kill();
 
     return { output };
   }
