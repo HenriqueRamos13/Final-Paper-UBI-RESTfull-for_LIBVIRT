@@ -10,11 +10,9 @@ export class MachinesService {
       exec('virsh list', (err, stdout, stderr) => {
         if (err) {
           console.log('Custom: Erro - ' + err);
-          console.log('Custom: Stdout - ' + stdout);
-          console.log('Custom: Stderr - ' + stderr);
-          resolve(null);
+          resolve(stderr);
         } else {
-          resolve(stdout || stderr);
+          resolve(stdout);
         }
       });
     });
