@@ -6,9 +6,14 @@ import { exec } from 'child_process';
 @Injectable()
 export class MachinesService {
   create(createMachineDto: CreateMachineDto) {
-    return exec('virsh list', (err, stdout, stderr) => {
-      return stdout;
+    let output: string | null;
+    exec('virsh list', (err, stdout, stderr) => {
+      if (err) {
+        console.log(err);
+      }
+      output = stdout;
     });
+    return output;
   }
 
   findAll() {
