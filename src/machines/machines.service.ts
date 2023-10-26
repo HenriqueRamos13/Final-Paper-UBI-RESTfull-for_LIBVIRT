@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMachineDto } from './dto/create-machine.dto';
 import { UpdateMachineDto } from './dto/update-machine.dto';
+import { exec } from 'child_process';
 
 @Injectable()
 export class MachinesService {
   create(createMachineDto: CreateMachineDto) {
-    return 'This action adds a new machine';
+    exec('virsh list', (err, stdout, stderr) => {
+      return stdout;
+    });
   }
 
   findAll() {
