@@ -83,4 +83,14 @@ export class MachinesController {
   ) {
     return this.machinesService.revertSnapshot(name, snapshotName);
   }
+
+  @Get('saveState/:name')
+  saveState(@Param('name') name: string) {
+    return this.machinesService.saveState(name);
+  }
+
+  @Get('restoreState/:stateName')
+  restoreState(@Param('stateName') stateName: string) {
+    return this.machinesService.restoreState(stateName);
+  }
 }

@@ -64,4 +64,9 @@ export class CreateMachineDto {
     default: 'http://example.com/path/to/iso',
   })
   location?: string;
+
+  @ApiProperty({
+    default: 'http://example.com/path/to/iso',
+  })
+  isoPath?: string;
 }

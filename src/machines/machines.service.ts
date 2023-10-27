@@ -29,6 +29,7 @@ export class MachinesService {
       graphics,
       console,
       location,
+      isoPath,
     } = createMachineDto;
 
     return await this.executeCommand(`
@@ -36,7 +37,7 @@ export class MachinesService {
         --name ${name} \
         --ram ${ram} \
         --vcpus ${vcpu} \
-        --disk path=${location},size=${disks.size} \
+        --disk path=/var/lib/libvirt/images/${name}.qcow2,size=${disks.size} \
         --os-type ${osType} \
         --os-variant ${osVariant} \
         --network bridge=${network.bridge} \
@@ -46,7 +47,8 @@ export class MachinesService {
             ? `pty,target_type=${console.target_type}`
             : `tty,target_type=${console.target_type}`
         } \
-        --location ${location}
+        ${location ? `--location ${location}` : ''}
+        ${isoPath ? `-c ${isoPath}` : ''}
     `);
   }
 
@@ -75,7 +77,9 @@ export class MachinesService {
   }
 
   async undefine(name: string) {
-    return await this.executeCommand(`virsh undefine ${name}`);
+    return await this.executeCommand(
+      `virsh undefine ${name} && rm -rf /var/lib/libvirt/images/${name}.qcow2`,
+    );
   }
 
   async console(name: string) {
@@ -102,5 +106,19 @@ export class MachinesService {
     return await this.executeCommand(
       `virsh snapshot-revert ${name} --snapshotname ${snapshotName}`,
     );
+  }
+
+  async saveState(name: string) {
+    const date = Date.now();
+    return {
+      stdout: await this.executeCommand(
+        `virsh save ${name} ${name}-${date}.state`,
+      ),
+      stateName: `${name}-${date}.state`,
+    };
+  }
+
+  async restoreState(stateName: string) {
+    return await this.executeCommand(`virsh restore ${stateName}`);
   }
 }
