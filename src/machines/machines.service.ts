@@ -5,11 +5,11 @@ import { exec } from 'child_process';
 
 @Injectable()
 export class MachinesService {
-  async create(createMachineDto: CreateMachineDto) {
-    const outputPromise = new Promise<string | null>((resolve, reject) => {
-      exec('virsh list', (err, stdout, stderr) => {
+  executeCommand = (command: string) =>
+    new Promise((resolve) => {
+      exec(command, (err, stdout, stderr) => {
         if (err) {
-          console.log('Custom: Erro - ' + err);
+          console.error(`Custom ERROR \n Command: ${command} \n Erro - ${err}`);
           resolve(stderr);
         } else {
           resolve(stdout);
@@ -17,24 +17,61 @@ export class MachinesService {
       });
     });
 
-    const output = await outputPromise;
-
-    return { output };
+  async create(createMachineDto: CreateMachineDto) {
+    return await this.executeCommand('virsh list');
   }
 
-  findAll() {
-    return `This action returns all machines`;
+  async findAll() {
+    return await this.executeCommand('virsh list --all');
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} machine`;
+  async update(name: string, updateMachineDto: UpdateMachineDto) {
+    return `This action updates a #${name} machine`;
   }
 
-  update(id: number, updateMachineDto: UpdateMachineDto) {
-    return `This action updates a #${id} machine`;
+  async reboot(name: string) {
+    return await this.executeCommand(`virsh reboot ${name}`);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} machine`;
+  async start(name: string) {
+    return await this.executeCommand(`virsh start ${name}`);
+  }
+
+  async shutdown(name: string) {
+    return await this.executeCommand(`virsh shutdown ${name}`);
+  }
+
+  async destroy(name: string) {
+    return await this.executeCommand(`virsh destroy ${name}`);
+  }
+
+  async undefine(name: string) {
+    return await this.executeCommand(`virsh undefine ${name}`);
+  }
+
+  async console(name: string) {
+    return await this.executeCommand(`virsh console ${name}`);
+  }
+
+  async createSnapshot(name: string, snapshotName: string) {
+    return await this.executeCommand(
+      `virsh snapshot-create ${name} --name ${snapshotName}`,
+    );
+  }
+
+  async listSnapshots(name: string) {
+    return await this.executeCommand(`virsh snapshot-list ${name}`);
+  }
+
+  async deleteSnapshot(name: string, snapshotName: string) {
+    return await this.executeCommand(
+      `virsh snapshot-delete ${name} --snapshotname ${snapshotName}`,
+    );
+  }
+
+  async revertSnapshot(name: string, snapshotName: string) {
+    return await this.executeCommand(
+      `virsh snapshot-revert ${name} --snapshotname ${snapshotName}`,
+    );
   }
 }

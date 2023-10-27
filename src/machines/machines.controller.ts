@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { MachinesService } from './machines.service';
 import { CreateMachineDto } from './dto/create-machine.dto';
 import { UpdateMachineDto } from './dto/update-machine.dto';
@@ -25,18 +17,70 @@ export class MachinesController {
     return this.machinesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.machinesService.findOne(+id);
+  @Patch(':name')
+  update(
+    @Param('name') name: string,
+    @Body() updateMachineDto: UpdateMachineDto,
+  ) {
+    return this.machinesService.update(name, updateMachineDto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMachineDto: UpdateMachineDto) {
-    return this.machinesService.update(+id, updateMachineDto);
+  @Get('reboot/:name')
+  reboot(@Param('name') name: string) {
+    return this.machinesService.reboot(name);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.machinesService.remove(+id);
+  @Get('start/:name')
+  start(@Param('name') name: string) {
+    return this.machinesService.start(name);
+  }
+
+  @Get('shutdown/:name')
+  shutdown(@Param('name') name: string) {
+    return this.machinesService.shutdown(name);
+  }
+
+  @Get('destroy/:name')
+  destroy(@Param('name') name: string) {
+    return this.machinesService.destroy(name);
+  }
+
+  @Get('undefine/:name')
+  undefine(@Param('name') name: string) {
+    return this.machinesService.undefine(name);
+  }
+
+  @Get('console/:name')
+  console(@Param('name') name: string) {
+    return this.machinesService.console(name);
+  }
+
+  @Get('createSnapshot/:name/:snapshotName')
+  createSnapshot(
+    @Param('name') name: string,
+    @Param('snapshotName') snapshotName: string,
+  ) {
+    return this.machinesService.createSnapshot(name, snapshotName);
+  }
+
+  @Get('listSnapshots/:name')
+  listSnapshots(@Param('name') name: string) {
+    return this.machinesService.listSnapshots(name);
+  }
+
+  @Get('deleteSnapshot/:name/:snapshotName')
+  deleteSnapshot(
+    @Param('name') name: string,
+    @Param('snapshotName') snapshotName: string,
+  ) {
+    return this.machinesService.deleteSnapshot(name, snapshotName);
+  }
+
+  @Get('revertSnapshot/:name/:snapshotName')
+  revertSnapshot(
+    @Param('name') name: string,
+    @Param('snapshotName') snapshotName: string,
+  ) {
+    return this.machinesService.revertSnapshot(name, snapshotName);
   }
 }
