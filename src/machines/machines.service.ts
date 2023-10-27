@@ -18,7 +18,36 @@ export class MachinesService {
     });
 
   async create(createMachineDto: CreateMachineDto) {
-    return await this.executeCommand('virsh list');
+    const {
+      name,
+      ram,
+      vcpu,
+      disks,
+      'os-type': osType,
+      'os-variant': osVariant,
+      network,
+      graphics,
+      console,
+      location,
+    } = createMachineDto;
+
+    return await this.executeCommand(`
+      virt-install \
+        --name ${name} \
+        --ram ${ram} \
+        --vcpus ${vcpu} \
+        --disk path=${location},size=${disks.size} \
+        --os-type ${osType} \
+        --os-variant ${osVariant} \
+        --network bridge=${network.bridge} \
+        --graphics ${graphics} \
+        --console ${
+          console.pty
+            ? `pty,target_type=${console.target_type}`
+            : `tty,target_type=${console.target_type}`
+        } \
+        --location ${location}
+    `);
   }
 
   async findAll() {
